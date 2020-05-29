@@ -40,8 +40,8 @@ def test(width, heith):
 
     return listofPix
 
-def findFirstPixel(image):
-    width, heith = image.size
+def findFirstPixel(rgb_im):
+    width, heith = rgb_im.size
     for i in range(0, width):        
         for j in range(0, heith):
             r, g, b = rgb_im.getpixel((i,j))
@@ -107,42 +107,39 @@ def isOnList(vizinho, lista):
             return True
     return False
 
+
+def getOrderedMatrix(im): 
     
-
-
-im = Image.open('Capturar4.PNG')
-rgb_im = im.convert('RGB')
-x,y = findFirstPixel(rgb_im)
-print("PRIMEIROS", x,y)
-pixelsOrdenados = []
-checados = []
-
-for i in range(3000):#418):
-    oldx, oldy = x,y
-    x,y = getImag2(rgb_im, x, y, checados)
-    if(x == None):
-        checados.append((oldx,oldy))
-        x,y = oldx, oldy
+    rgb_im = im.convert('RGB')
+    x,y = findFirstPixel(rgb_im)
+    print("PRIMEIROS", x,y)
+    pixelsOrdenados = []
+    checados = []
+    for i in range(4000):#418):
+        oldx, oldy = x,y
+        x,y = getImag2(rgb_im, x, y, checados)
+        if(x == None):
+            checados.append((oldx,oldy))
+            x,y = oldx, oldy        
         
-        
-    pixelsOrdenados.append((x,y))
+        pixelsOrdenados.append((x,y))
 
-#print(pixelsOrdenados)
+    return pixelsOrdenados
 
-width, heith = im.size
+def plotPixels(im, pixelsOrdenados):
+    width, heith = im.size
+    #plottedddd = test(width, heith)
+    x = []
+    y = []
+    for point in pixelsOrdenados:#plottedddd:
+        x.append(np.abs(point[0] - width))
+        y.append(np.abs(point[1] - heith))
 
-#plottedddd = test(width, heith)
-
-
-x = []
-y = []
-for point in pixelsOrdenados:#plottedddd:
-    x.append(np.abs(point[0] - width))
-    y.append(np.abs(point[1] - heith))
-
-x = np.array(x)
-y = np.array(y)
+    x = np.array(x)
+    y = np.array(y)
+    normalPlot(x,y)
 
 
-#scatterPlot(x,y)
-normalPlot(x,y)
+imagem = Image.open('Capturar3.PNG')
+pixelsOrd = getOrderedMatrix(imagem)
+plotPixels(imagem, pixelsOrd)
