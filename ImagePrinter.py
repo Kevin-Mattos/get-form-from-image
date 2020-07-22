@@ -3,13 +3,8 @@ from os import listdir, getcwd
 import os
 from os.path import isfile, join
 from PIL import Image, ImageStat
-from pdf2image import convert_from_path, convert_from_bytes
-from pdf2image.exceptions import (
-    PDFInfoNotInstalledError,
-    PDFPageCountError,
-    PDFSyntaxError
-)
-from scipy.interpolate import interp1d
+
+
 import matplotlib.pyplot as plt, numpy as np
 
 class ImagemClass():
@@ -211,7 +206,7 @@ def findHighestY(imagem):
 
 
 
-main('teste.jpg')
+main('out.jpg')
 
 
 
