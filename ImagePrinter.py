@@ -211,7 +211,7 @@ def findHighestY(imagem):
 
 
 
-main()
+main('teste.jpg')
 
 
 
