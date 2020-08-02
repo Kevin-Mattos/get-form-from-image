@@ -1,2 +1,2 @@
-# get-object-from-image
+# Pega o contorno de um objeto na imagem
  
