@@ -1,7 +1,8 @@
-import cv2 as cv, os
+import cv2 as cv, os, numpy as np
 from os import  getcwd
 import utils
 from PIL import Image
+
 PROJECTPATH = getcwd()
 
 
@@ -14,12 +15,18 @@ class Contour:
         print('Pegando contorno da: ' + self.fileName)   
         path = PROJECTPATH + r'/Images/{}.jpg'.format(self.fileName)
         contours, hierarchy = self.getContour(path)
-        if(len(contours) > 3):
+        
+        if(False):#len(contours) > 3):
             print('Tem Varios na Imagem')
-        else:
             print('\n\nhierarquia: \n{}\n\n'.format(hierarchy))
             self.saveContours(contours, self.fileName)
-            print('MAIOR Y = ', self.reorderContour(contours[1]))
+
+        else:
+            self.saveCSVs(contours)
+
+            #print('MAIOR Y = ', self.reorderContour(contours[2]))
+            #print('\n\nhierarquia: \n{}\n\n'.format(hierarchy))
+            #self.saveContours(contours, self.fileName)
             #self.saveList(contours[1], self.fileName)
 
         #print(contours[1])
@@ -27,27 +34,67 @@ class Contour:
         #imagem = Image.open(path)
         #utils.plotPixels(imagem, contours[1])
 
-    def reorderContour(self, contour):
-        newList = []
-        contourSize = len(contour)
-        print('TAMANHO DO CONTORNO: ', contourSize)
-        biggestY = 0
-        index = 0
-        for i in range(contourSize):
-            newList.append(contour[i][0])
-            if(contour[i][0,1] > biggestY):                
-                biggestY = contour[i][0,1] 
-                index = i
+    def saveCSVs(self, contours):
+        #contours = np.array(contours)
+                
+        biggestYs = self.getBiggestYs(contours)    
+    
+        reorderedContours = self.reorderContours( biggestYs, contours)
+        i = 0
+        for ordered in reorderedContours:
+            np.savetxt(PROJECTPATH + r'/Outputs/{}_csv{}.csv'.format(self.fileName, i), ordered, delimiter=',', fmt='%5.0f')
+            i+=1
+        return biggestYs
 
-            
-
-        path = PROJECTPATH + r'/Images/{}.jpg'.format(self.fileName)
-        im = Image.open(path)
-        newList = newList[index:] + newList[:index]
+    def reorderContours(self, biggestYs, contours):
+        reorderedCount = []
         
-        self.saveList2(newList, self.fileName)
-        utils.plotPixels(im, newList)
-        return contour[index][0,1]
+        for i  in range(len(biggestYs)):  
+            contour = contours[i][:,0]
+            reord = np.append(contour[biggestYs[i]:], contour[ :biggestYs[i]], axis = 0)            
+            reorderedCount.append(reord)
+            
+        
+        return reorderedCount
+
+    def getBiggestYs(self, contours):
+        ys = []
+        i = 0
+        for contour in contours:
+            
+            test = contour[:, 0,:]
+            ys.append(np.argmin(test[:, 1], axis= 0))
+            
+        return np.array(ys)
+
+        
+# =============================================================================
+# 
+#     def reorderContour(self, contour):
+#         newList = []
+#         contourSize = len(contour)
+#         print('TAMANHO DO CONTORNO: ', contourSize)
+#         biggestY = 0
+#         index = 0
+#         for i in range(contourSize):
+#             newList.append(contour[i][0])
+#             if(contour[i][0,1] > biggestY):                
+#                 biggestY = contour[i][0,1] 
+#                 index = i
+# 
+#             
+#         teste = np.array(contour)
+#         print(teste)
+#         path = PROJECTPATH + r'/Images/{}.jpg'.format(self.fileName)
+#         im = Image.open(path)
+#         newList = newList[index:] + newList[:index]
+#         
+#         
+# 
+#         self.saveList2(newList, self.fileName)
+#         utils.plotPixels(im, newList)
+#         return contour[index][0,1]
+# =============================================================================
 
 
     def getContour(self,path):        
@@ -68,6 +115,10 @@ class Contour:
 
 
     def saveList2(self, lista, fileName):
+
+        npAr = np.array(lista)
+        np.savetxt(PROJECTPATH + r'/Outputs/{}_csv.csv'.format(self.fileName), npAr, delimiter=',', fmt='%5.0f')
+
         f = open(PROJECTPATH + r'/Outputs/{}.txt'.format(self.fileName), 'w')
         f.write('{\n')
         for item in lista:
@@ -91,4 +142,5 @@ class Contour:
 
 if(__name__ == '__main__'):
     import contourfinding
-    contourfinding.main()
+    contourfinding.deletaImagens()
+    contourfinding.main(['Peca2.pdf', '2.PDF'])

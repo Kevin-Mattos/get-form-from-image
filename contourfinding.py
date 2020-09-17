@@ -19,17 +19,18 @@ def deletaImagens():
             remove(file)
 
 
+
+
 def main(onlyfiles = None):
 
     if(onlyfiles == None):
         mypath = getcwd() + r'/pdfs/'
         onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-    else:
-        onlyfiles = [onlyfiles]  
+    
     print(onlyfiles)  
     
     for file in onlyfiles:
-        if(utils.getFileType(file) == '.PDF'):
+        if(utils.getFileType(file) == '.PDF' or utils.getFileType(file) == '.pdf'):
             utils.pdfToImg(file)  
         else:
             utils.saveImgOnRightFolder(file) 
@@ -43,7 +44,7 @@ def main(onlyfiles = None):
 
 if(__name__ == '__main__'):
     deletaImagens()
-    main('1.PDF')
+    main(['Imagesteste2.jpg'])
 
 
 
