@@ -39,12 +39,14 @@ def main(onlyfiles = None):
 
         a = Contour(file)  
         a.start()
-
+        newContours = a.filterCountours()
+        a.saveContours(newContours)
+        a.saveCSVs(newContours)
 
 
 if(__name__ == '__main__'):
     deletaImagens()
-    main(['Imagesteste2.jpg'])
+    main(['Peca2.pdf'])
 
 
 

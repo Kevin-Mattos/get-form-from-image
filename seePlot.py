@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import sys, pygame, time, math
-from os import  getcwd
+from os import  getcwd, listdir
+from os.path import isfile, join
 from enum import Enum
 import pandas as pd, numpy as np
 
@@ -115,16 +116,18 @@ def closeWindow():
 pygame.init()
 
 
-block_size = 2
+block_size = 1
 margin = 0
 fullSize = block_size + margin
-gridSize = 400
+gridSize = 800
 width, height = gridSize*(fullSize), gridSize * (fullSize)
 size = width + block_size, height + block_size
 
 screen = pygame.display.set_mode(size)
 white = 111, 115, 120
 screen.fill(white)
+
+
 
 color = 0,0,0
 buttons = []
@@ -143,46 +146,28 @@ for x in range(math.floor(width/(fullSize))):
         pygame.draw.rect(screen, color, rect)
 
 
-pygame.display.flip()
-ev = pygame.event.get()
-board = Board(buttons)
-#board.run()
-#board.printAll()
+
 
 def cleanBoard():
     for line in buttons:
         for cell in line:            
             cell.changeColor(color)
 
-def draw_csv(fileName):
-    form = pd.read_csv(fileName).to_numpy()
-    
-    maior,menor = getMaiorMenor(form)
-    
-    print("maior x: {}, maior y: {}".format(max(form[:,0]), max(form[:,1])))
-    print("menor x: {}, menor y: {}".format(min(form[:,0]), min(form[:,1])))
-# =============================================================================
-#     form[:,0] = (form[:,0]/35).astype(np.int64)
-#     form[:,1] = (form[:,1]/17).astype(np.int64)
-# =============================================================================
-    form = form - menor
-    form = (form/(maior)).astype(np.int64)
+def draw_csv(form):   
 
-    print("maior x: {}, maior y: {}".format(max(form[:,0]), max(form[:,1])))
-    print("menor x: {}, menor y: {}".format(min(form[:,0]), min(form[:,1])))
-    print('==============================')
     for i in form:
         checkIfQuit()
-        print(i)
-        a = board.getButtonVect(i)
-        if(a is not None):
-            a.changeColor(RED)
-       
-        #time.sleep(1)
+        changeColor(i)       
+        #time.sleep(0.02)
         pygame.display.flip()
     
     
     return form
+
+def changeColor(i, color = RED):
+    a = board.getButtonVect(i)
+    if(a is not None):
+        a.changeColor(color)
 
 def getMaiorMenor(form):
     
@@ -201,16 +186,104 @@ def getMaiorMenor(form):
     else:
         maior = maiorY
     
-    return maior/gridSize, menor
+    return maior/(gridSize - 2), menor
+    
+
+def formatForms(forms, maior, menor):
+    newForms = []
+    for form in forms:
+        print("maior x: {}, maior y: {}".format(max(form[:,0]), max(form[:,1])))
+        print("menor x: {}, menor y: {}".format(min(form[:,0]), min(form[:,1])))
+    # =============================================================================
+    #     form[:,0] = (form[:,0]/35).astype(np.int64)
+    #     form[:,1] = (form[:,1]/17).astype(np.int64)
+    # =============================================================================
+        form[:,1] = form[:,1] - menor#min(form[:,1])
+        form = np.floor((form/(maior))).astype(np.int64)
+        top = [form[0]]        
+        print('tamanho form1: {}'.format(len(form)))
+        _, index = np.unique(form, axis = 0, return_index=True)
+        form =  form[np.sort(index)]
+        form = np.concatenate((form , top), axis = 0)
+        
+        print('tamanho form2: {}'.format(len(form)))
+        newForms.append(form)
+        print("maior x: {}, maior y: {}".format(max(form[:,0]), max(form[:,1])))
+        print("menor x: {}, menor y: {}".format(min(form[:,0]), min(form[:,1])))
+        
+       
+        print('==============================')
+    return newForms
+
+
+def centralizeForms(forms):
+    newForms = []
+    
+    #_,menor = getMaiorMenor(forms[0])  
+    menor = min(forms[0][:, 1])#int(min(forms[0][:, 1])/2)
+    meio =  min(forms[0][:, 0])#int(min(forms[0][:, 0])/2)
+    for form in forms:
+        form[:, 1] = form[:, 1] - menor
+        form[:, 0] = form[:, 0] - meio
+        newForms.append(form)
+    return newForms
     
 
 def drawMultiple(files = ['2_csv0.csv', 'Peca2_csv0.csv']):
-    for fileName in files:
-        file = PROJECTPATH + r'/Outputs/{}'.format(fileName)
-        array = draw_csv(file)
+    
+    
+    
+    forms = getForms(files)
+   
+    forms = centralizeForms(forms)
+    
+    
+    maior,menor = getMaiorMenor(forms[0])   
+    forms = formatForms(forms, maior, menor)
+    
+    for i in range(len(forms)):#fileName in files:
+        form = forms[i]
+        array = draw_csv(form)
+        if( i < len(forms) - 1):
+            goToNext(array, forms, i)
+            
+   
+def goToNext(form, forms, i):
+    
+    nextForm = forms[i + 1]
+    for j in range(form[-1, -1], nextForm[-1, -1], -1):
+        changeColor((form[-1,0], j))       
+        #time.sleep(1)
+        pygame.display.flip()
+ 
+def getForms(files):
+    forms = []
+    for i in range(len(files)):
+        file = PROJECTPATH + r'/Outputs/{}'.format(files[i])
+        form = pd.read_csv(file).to_numpy()
+        
+        forms.append(form)
+    return forms
+        
+    
+def getFiles(folder):
+    mypath = getcwd() + r'/{}/'.format(folder)
+    onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+    return onlyfiles
         #cleanBoard()
 
-drawMultiple(['Imagesteste2_csv2.csv'])
+#pygame.display.flip()
+ev = pygame.event.get()
+board = Board(buttons)
+
+#drawMultiple(['Peca2_csv2.csv', 'Peca2_csv10.csv', 'Peca2_csv26.csv', 'Peca2_csv30.csv'])#)#
+#drawMultiple(['Imagesteste2_csv2.csv', 'Imagesteste2_csv4.csv'])
+files = getFiles('Outputs')
+files.sort(key = lambda x:int(x.partition('_')[0]))
+
+print(files)
+drawMultiple(files)
+
 # =============================================================================
 # time.sleep(1)
 # closeWindow()
