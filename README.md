@@ -13,7 +13,7 @@ Você vai precisar das seguintes bibliotecas:
 ## Uso
 
  Para iniciar, salve em formato pdf ou jpg os arquivos dentro da pasta Pdfs, em seguida execute contourfinding.py, que ira processar as imagens e salvar os contornos em uma imagem(opcional) nas Imagens e salvar as coordenadas nos Outputs.
- Para visualizar o caminho que a maquina de estampagem ira percorrer, execute seePlot.py
+ Para visualizar o caminho que a maquina de estampagem irá percorrer, execute seePlot.py
 
 ## TODOs
  * Refatorações (organizar melhor a estrutura do código)
