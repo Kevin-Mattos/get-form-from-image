@@ -4,8 +4,8 @@ import sys, pygame, time, math
 from os import  getcwd, listdir
 from os.path import isfile, join
 from enum import Enum
-import pandas as pd, numpy as np
-
+import pandas as pd, numpy as np, random
+from contourfinding import deletaImagens
 RED = 255,0,0
 GREEN = 0,255,0
 BLUE = 0,0,255
@@ -17,12 +17,12 @@ class Estado(Enum):
 PROJECTPATH = getcwd()
 
 class Button:
-    def __init__(self, x, y, rect, parent = None):
-        self.state = Estado.LIVRE
+    def __init__(self, x, y, rect):
+        
         self.rect = rect
         self.pos = x,y
 
-        self.parent = parent
+        
         self.g = 0
         self.h = 0
         self.f = 0
@@ -44,10 +44,7 @@ class Button:
     def changeColor(self, color = (255,255,255)):
         pygame.draw.rect(screen, color, self.rect)
         self.state = Estado.BLOQUEADO
-        #pygame.display.flip()
-    def Checar(self, color):
-        self.state = Estado.CHECADO
-        pygame.draw.rect(screen, color, self.rect)
+
 
 
 class Board:
@@ -61,7 +58,7 @@ class Board:
     
     def getButtonByPixel(self, pos):
         print(pos)
-        vet = getPosByPixel(pos)
+        vet = self.getPosByPixel(pos)
         i = vet[0]
         j = vet [1]       
         if(i < 0 or i > gridSize - 1 or j < 0 or j > gridSize - 1):
@@ -75,23 +72,15 @@ class Board:
         if(i < 0 or i > gridSize - 1 or j < 0 or j > gridSize - 1):
             return 
         return self.buttons[i][j]
-
-    def getNeighbours(self, i, j):
-        but = [self.getButtonVect((i + 1,j))]
-        but.append(self.getButtonVect((i - 1,j)))
-        but.append(self.getButtonVect((i, j + 1)))
-        but.append(self.getButtonVect((i, j - 1)))
-
-        #but.append(self.getButtonVect((i + 1, j + 1)))
-        #but.append(self.getButtonVect((i + 1, j - 1)))
-        #but.append(self.getButtonVect((i - 1, j + 1)))
-        #but.append(self.getButtonVect((i - 1, j - 1)))
-        ret = []
-        for button in but:
-            if(button is not None and button.state == Estado.LIVRE):
-                ret.append(button)
+    
+    def getPosByPixel(self, pos):
+        linha = math.floor((pos[0] - fullSize/2)/fullSize)
+        coluna = math.floor((pos[1] - fullSize/2)/fullSize)
         
-        return ret
+        return linha,coluna
+
+
+
         
 def checkIfQuit(ev = None):
     if(ev is None):
@@ -113,39 +102,6 @@ def closeWindow():
     pygame.quit()
     sys.exit()
 
-pygame.init()
-
-
-block_size = 1
-margin = 0
-fullSize = block_size + margin
-gridSize = 800
-width, height = gridSize*(fullSize), gridSize * (fullSize)
-size = width + block_size, height + block_size
-
-screen = pygame.display.set_mode(size)
-white = 111, 115, 120
-screen.fill(white)
-
-
-
-color = 0,0,0
-buttons = []
-
-def getPosByPixel(pos):
-    linha = math.floor((pos[0] - fullSize/2)/fullSize)
-    coluna = math.floor((pos[1] - fullSize/2)/fullSize)
-    
-    return linha,coluna
-
-for x in range(math.floor(width/(fullSize))):
-    buttons.append([])
-    for y in range(math.floor(height/(fullSize))):
-        rect = pygame.Rect(x*(block_size+margin) + math.ceil(fullSize/2) ,y*(block_size+margin) + math.ceil(fullSize/2), block_size, block_size)
-        buttons[x].append(Button(x,y,rect))
-        pygame.draw.rect(screen, color, rect)
-
-
 
 
 def cleanBoard():
@@ -154,10 +110,10 @@ def cleanBoard():
             cell.changeColor(color)
 
 def draw_csv(form):   
-
+    colors = [RED, BLUE, GREEN]
     for i in form:
         checkIfQuit()
-        changeColor(i)       
+        changeColor(i, colors[0])       
         #time.sleep(0.02)
         pygame.display.flip()
     
@@ -194,10 +150,7 @@ def formatForms(forms, maior, menor):
     for form in forms:
         print("maior x: {}, maior y: {}".format(max(form[:,0]), max(form[:,1])))
         print("menor x: {}, menor y: {}".format(min(form[:,0]), min(form[:,1])))
-    # =============================================================================
-    #     form[:,0] = (form[:,0]/35).astype(np.int64)
-    #     form[:,1] = (form[:,1]/17).astype(np.int64)
-    # =============================================================================
+
         form[:,1] = form[:,1] - menor#min(form[:,1])
         form = np.floor((form/(maior))).astype(np.int64)
         top = [form[0]]        
@@ -245,16 +198,25 @@ def drawMultiple(files = ['2_csv0.csv', 'Peca2_csv0.csv']):
         form = forms[i]
         array = draw_csv(form)
         if( i < len(forms) - 1):
-            goToNext(array, forms, i)
+            path = goToNext(array, forms, i)
+        
+        saveScaledForm(array, i, files[i])
             
-   
+
+def saveScaledForm(form, i, fileName, folder = 'Redimencionados'):
+    np.savetxt(PROJECTPATH + r'/{}/{}.csv'.format(folder, fileName), form, delimiter=',', fmt='%5.0f')
+
 def goToNext(form, forms, i):
     
     nextForm = forms[i + 1]
+    path = []
     for j in range(form[-1, -1], nextForm[-1, -1], -1):
-        changeColor((form[-1,0], j))       
+        changeColor((form[-1,0], j), BLUE)       
         #time.sleep(1)
+        path.append((form[-1,0], j))
         pygame.display.flip()
+        
+    return np.array(path)
  
 def getForms(files):
     forms = []
@@ -271,6 +233,36 @@ def getFiles(folder):
     onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
     return onlyfiles
         #cleanBoard()
+        
+    
+deletaImagens(['Redimencionados'])
+pygame.init()
+
+
+block_size = 1
+margin = 0
+fullSize = block_size + margin
+gridSize = 500
+width, height = gridSize*(fullSize), gridSize * (fullSize)
+size = width + block_size, height + block_size
+
+screen = pygame.display.set_mode(size)
+white = 111, 115, 120
+screen.fill(white)
+
+
+
+color = 0,0,0
+buttons = []
+
+
+for x in range(math.floor(width/(fullSize))):
+    buttons.append([])
+    for y in range(math.floor(height/(fullSize))):
+        rect = pygame.Rect(x*(block_size+margin) + math.ceil(fullSize/2) ,y*(block_size+margin) + math.ceil(fullSize/2), block_size, block_size)
+        buttons[x].append(Button(x,y,rect))
+        pygame.draw.rect(screen, color, rect)
+
 
 #pygame.display.flip()
 ev = pygame.event.get()

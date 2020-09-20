@@ -13,13 +13,14 @@ class Contour:
         self.reorderedContours = None
     
 
-    def start(self):
+    def start(self, saveContourImages = False):
         print('Pegando contorno da: ' + self.fileName)   
         path = PROJECTPATH + r'/Images/{}.jpg'.format(self.fileName)
         contours, hierarchy = self.getContour(path)
         self.contours = contours
-        print('\n\nhierarquia: \n{}\n\n'.format(hierarchy))
-        #self.saveContours(contours, self.fileName)
+        #print('\n\nhierarquia: \n{}\n\n'.format(hierarchy))
+        if(saveContourImages):
+            self.saveContours(contours, self.fileName)
 # =============================================================================
 #         if(False):#len(contours) > 3):
 #             print('Tem Varios na Imagem')

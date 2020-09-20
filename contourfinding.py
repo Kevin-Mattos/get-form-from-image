@@ -7,9 +7,9 @@ import utils
 from contour import Contour
 
 
-def deletaImagens():
-
-    folders = ['Images', 'Outputs', 'Contours']
+def deletaImagens(folders = None):
+    if(folders == None):
+        folders = ['Images', 'Outputs', 'Contours', 'Redimencionados']
 
     for folder in folders:
         mypath =  getcwd()  + r'/{}/'.format(folder)
